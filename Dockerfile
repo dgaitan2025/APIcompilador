@@ -1,13 +1,14 @@
-# ---------- Fase de compilación ----------
-FROM maven:3.9.6-eclipse-temurin-21 AS build
-WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn -q package -DskipTests     # genera target/APICompilador.war
-
-# ---------- Fase de ejecución ----------
+# Tomcat oficial con JDK 21 (vale 17, 20… mientras tu WAR sea Java ≥ 8)
 FROM tomcat:9.0-jdk21
-# Render expone su puerto en la variable $PORT; Tomcat usa 8080 por defecto → OK.
-ENV CATALINA_OPTS="-Dfile.encoding=UTF-8"
-COPY --from=build /app/target/APICompilador.war /usr/local/tomcat/webapps/ROOT.war
+
+# Borramos los ejemplos que vienen por defecto
+RUN rm -rf /usr/local/tomcat/webapps/*
+
+# Copiamos tu WAR y lo dejamos como ROOT.war  →  servirá en  /
+COPY ROOT.war /usr/local/tomcat/webapps/ROOT.war
+
+# Puerto expuesto por Tomcat
+EXPOSE 8080
+
+# Arrancar Tomcat
 CMD ["catalina.sh", "run"]
